@@ -1,0 +1,70 @@
+{% extends 'govapp/base.html' %} 
+
+
+{% block content %}
+{% if error_message %}
+<div class="alert alert-danger alert-dismissible fade show" role="alert">
+  {{error_message}}
+  <button
+    type="button"
+    class="btn-close"
+    data-bs-dismiss="alert"
+    aria-label="Close"
+  ></button>
+</div>
+{% endif %}
+{% if request.user.is_authenticated is True %}
+<input type="hidden" id="csrf_token" value="{{ csrf_token }}" />
+<input type="hidden" id="form_id" value="{{ form_id }}" />
+<input type="hidden" id="version_id" value="{{ version_id }}" />
+
+<div class="container-sm">
+  <div
+    style="display: inline-flex; width: 100%; justify-content: space-between"
+    class="d-flex"
+  >
+    <div>
+      <h1>{{form.name}} </h1>
+      <p>{{form.description}} </p>
+    </div>
+    <div>
+      
+    </div>
+  </div>
+
+  {% if success == True %}
+  <div class="alert alert-success alert-dismissible fade show" role="alert">
+    Form created successfully
+    <button
+      type="button"
+      class="btn-close"
+      data-bs-dismiss="alert"
+      aria-label="Close"
+    ></button>
+  </div>
+  {% endif %}
+
+  <div id="example"></div>
+  <div class="container" style="margin-top: 50px">
+    <div id="form-editor-container"></div>
+  </div>
+</div>
+<script src="/static/pages/js/forms_editor.js"></script>
+
+<link rel="stylesheet" href="/static/form_builder/css/app.css"/>
+
+<script src="/static/form_builder/js/form-builder.js"></script>
+<script>
+  $(() => {
+    const form_id = $("#form_id").val();
+    const version_id = $("#version_id").val();
+    forms_editor.init(form_id, version_id);
+  });
+</script>
+{% else %}
+<div class="container">
+  <div class="alert alert-danger" role="alert">
+    <p>Permission Denied.</p>
+  </div>
+</div>
+{% endif %} {% endblock %}

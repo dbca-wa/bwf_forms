@@ -10,6 +10,7 @@ dependencies = [
     "python-decouple>=3.8",
     "dj-database-url",
     "djangorestframework",
+    "git+https://github.com/dbca-wa/webtemplate2.git#egg=webtemplate_dbca",
 ]
 description = "A Django app to create and render web forms."
 readme = "README.rst"

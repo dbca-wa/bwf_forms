@@ -1,0 +1,73 @@
+{% extends 'govapp/base.html' %} 
+
+
+{% block content %}
+{% if error_message %}
+<div class="alert alert-danger alert-dismissible fade show" role="alert">
+  {{error_message}}
+  <button
+    type="button"
+    class="btn-close"
+    data-bs-dismiss="alert"
+    aria-label="Close"
+  ></button>
+</div>
+{% endif %}
+{% if request.user.is_authenticated is True %}
+<input type="hidden" id="csrf_token" value="{{ csrf_token }}" />
+
+
+<div class="container-sm">
+  <div
+    style="display: inline-flex; width: 100%; justify-content: space-between"
+    class="d-flex"
+  >
+    <div>
+      <h1>Dashboard</h1>
+      <p></p>
+    </div>
+    <div>
+      <button class="btn btn-primary" id="new-form-btn">
+        <i class="bi bi-plus"></i>
+        New Form
+      </button>
+    </div>
+  </div>
+
+  {% if success == True %}
+  <div class="alert alert-success alert-dismissible fade show" role="alert">
+    Form created successfully
+    <button
+      type="button"
+      class="btn-close"
+      data-bs-dismiss="alert"
+      aria-label="Close"
+    ></button>
+  </div>
+  {% endif %}
+
+  <div id="forms_dashboard">
+    <table id="example" class="table" style="width: 100%">
+      <tbody id="publish-tbody">
+        <tr>
+          <td colspan="8" class="text-center">Loading...</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+<script src="/static/pages/js/forms_dashboard.js"></script>
+
+{% include "modals/new_form_modal.html" %}
+<script>
+  $(() => {
+    forms_dashboard.init();
+  });
+</script>
+{% else %}
+<div class="container">
+  <div class="alert alert-danger" role="alert">
+    <p>Permission Denied.</p>
+  </div>
+</div>
+{% endif %} {% endblock %}

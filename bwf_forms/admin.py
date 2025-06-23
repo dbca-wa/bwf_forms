@@ -5,13 +5,15 @@ from bwf_forms.models import (
 )
 @admin.register(BwfForm)
 class FormAdmin(admin.ModelAdmin):
-    list_display = ('form_id', 'name', 'description', 'created_at', 'updated_at')
-    search_fields = ('form_id', 'name')
+    list_display = ('slug', 'name', 'description', 'created_at', 'updated_at')
+    search_fields = ('slug', 'name')
     readonly_fields = ('created_at', 'updated_at')
+    
+    prepopulated_fields = {'slug': ('name', )}
     
 @admin.register(BwfFormVersion)
 class FormVersionAdmin(admin.ModelAdmin):
-    list_display = ('form', 'version_number', 'created_at', 'updated_at')
-    search_fields = ('form__form_id', 'version_number')
+    list_display = ('form', 'version_id', 'created_at', 'updated_at')
+    search_fields = ('form__name', 'version_id')
     readonly_fields = ('created_at', 'updated_at')
     list_filter = ('form',)

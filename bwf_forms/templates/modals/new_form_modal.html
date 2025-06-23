@@ -1,0 +1,124 @@
+<div
+  class="modal fade"
+  id="form-creation-modal"
+  tabindex="-1"
+  role="dialog"
+  aria-labelledby="form-creation-modal-label"
+  aria-hidden="true"
+>
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="form-creation-modal-label">
+          New Form
+        </h5>
+        <button
+          type="button"
+          class="btn btn-ghost"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        >
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form id="creation-form">
+          <div class="mb-3">
+            <label for="input-form-name" class="form-label">Name</label>
+            <input
+              type="text"
+              class="form-control"
+              id="input-form-name"
+              placeholder="Form name"
+              required
+            />
+          </div>
+
+          <div class="mb-3">
+            <label for="input-form-description" class="form-label"
+              >Description</label
+            >
+            <textarea
+              class="form-control"
+              id="input-form-description"
+              rows="3"
+              placeholder="What is this form about?"
+            ></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary close-button">
+          Close
+        </button>
+        <button type="button" class="btn btn-primary create-form-button">
+          Create Form
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  new_form_data = {
+    validate: function (data) {
+      const { name, description } = data;
+      if (!name || name.length < 3) {
+        alert("Form name must be at least 3 characters long.");
+        return false;
+      }
+
+      return true;
+    },
+  };
+  $(() => {
+    $("#form-creation-modal").on("shown.bs.modal", function (e) {
+      $("#input-form-name").focus();
+    });
+
+    $("#form-creation-modal").on("hidden.bs.modal", function (e) {
+      $("#input-form-name").val("");
+      $("#input-form-description").val("");
+    });
+
+    $("#form-creation-modal .close-button").on("click", function () {
+      $("#form-creation-modal").modal("hide");
+    });
+    $("#form-creation-modal .create-form-button").on("click", () => {
+      $("#creation-form").submit();
+    });
+  });
+
+  $("#creation-form").on("submit", function (e) {
+    e.preventDefault();
+
+    const _ = forms_dashboard;
+    $(".create-form-button").prop("disabled", true);
+    const name = $("#input-form-name").val();
+    const description = $("#input-form-description").val() ?? "";
+    
+
+    if (!new_form_data.validate({ name, description })) {
+      $(".create-form-button").prop("disabled", false);
+      return;
+    }
+    const data = {
+      name,
+      description,
+    };
+    _.api
+      .createForm(data)
+      .then((response) => {
+        _.navigate.toVersionEdition(response.form.id, response.version_id);
+        $(".create-form-button").prop("disabled", false);
+        $("#form-creation-modal").modal("hide");
+      })
+      .catch((error) => {
+        debugger
+        $(".create-form-button").prop("disabled", false);
+        alert(
+          "An error occurred while creating the form. Please try again."
+        );
+      });
+  });
+</script>

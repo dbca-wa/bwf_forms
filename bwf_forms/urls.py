@@ -14,12 +14,24 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-from django.contrib import admin
-from django.urls import path
-from ..views import HomeView, FormVisualizerView
+
+from django.shortcuts import redirect
+from django.urls import path, include
+from .views import HomeView, EditorView, FormsAPIViewset, FormVersionAPIViewset
+# In your project's urls.py
+from rest_framework.routers import DefaultRouter
+
+
+router = DefaultRouter()
+router.register(r'form', FormsAPIViewset)
+router.register(r'form-version', FormVersionAPIViewset)
+
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('home/', HomeView.as_view(), name='form_builder_home'),
-    path('fill/', FormVisualizerView.as_view(), name='form_visualizer'),
+    path('', lambda request: redirect('bwf_forms_home', permanent=True)),
+    path('home/', HomeView.as_view(), name='bwf_forms_home'),
+    path('editor/', EditorView.as_view(), name='form_editor'),
+    path('editor/<int:form_id>/', EditorView.as_view(), name='form_editor_with_id'),
+    path('editor/<str:version_id>/', EditorView.as_view(), name='form_editor_with_version_id'),
+    path('api/', include(router.urls)),
 ]
