@@ -1,0 +1,44 @@
+<div class="row">
+  <div class="col">
+    <ul class="nav nav-links" id="tabsEdition" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="display-tab" data-bs-toggle="tab" data-bs-target="#display-tab-pane"
+          type="button" role="tab" aria-controls="display-tab-pane" aria-selected="true">Display</button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="data-tab" data-bs-toggle="tab" data-bs-target="#data-tab-pane" type="button"
+          role="tab" aria-controls="data-tab-pane" aria-selected="false">Data</button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="validation-tab" data-bs-toggle="tab" data-bs-target="#validation-tab-pane"
+          type="button" role="tab" aria-controls="validation-tab-pane" aria-selected="false">Validation</button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="api-tab" data-bs-toggle="tab" data-bs-target="#api-tab-pane" type="button"
+          role="tab" aria-controls="api-tab-pane" aria-selected="false">API</button>
+      </li>
+    </ul>
+
+    <div class="tab-content mt-3" id="tabsEditionContent">
+      <div class="tab-pane fade show active" id="display-tab-pane" role="tabpanel" aria-labelledby="display-tab"
+        tabindex="0">
+        <form></form>
+      </div>
+      <div class="tab-pane fade" id="data-tab-pane" role="tabpanel" aria-labelledby="data-tab" tabindex="0">
+        <form></form>
+      </div>
+      <div class="tab-pane fade" id="validation-tab-pane" role="tabpanel" aria-labelledby="validation-tab" tabindex="0">
+        <form></form>
+      </div>
+      <div class="tab-pane fade" id="api-tab-pane" role="tabpanel" aria-labelledby="api-tab" tabindex="0">
+        <form></form>
+      </div>
+
+    </div>
+  </div>
+  <div class="col">
+    <h3>Preview</h3>
+    <div id="preview-edition"></div>
+  </div>
+
+</div>

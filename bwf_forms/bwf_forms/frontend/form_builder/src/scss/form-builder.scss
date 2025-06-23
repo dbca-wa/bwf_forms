@@ -1,0 +1,384 @@
+// Variables
+$side-panel-width: 250px;
+$main-panel-padding: 20px;
+$primary-soften-color: #e9f1fa;
+$primary-soften-text-color: #004269;
+
+// Mixins
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: start;
+}
+
+// Side Panel
+.formcomponents {
+  width: 40%;
+  max-width: $side-panel-width;
+  height: 100%;
+  @include flex-center;
+  flex-direction: column;
+  padding: 10px;
+  // box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+}
+
+// Main Panel
+.formarea {
+  flex-grow: 1;
+  padding: $main-panel-padding;
+  height: 50hv;
+  background-color: #ffffff;
+  @include flex-center;
+  flex-direction: column;
+}
+
+// Container
+.formbuilder {
+  display: flex;
+  min-height: 60vh;
+}
+
+#formbuilder .formarea {
+  border: dashed 1px #ddd;
+  padding: 16px;
+}
+#formbuilder .formarea {
+  background-color: #fff;
+}
+
+.category-group {
+  padding: 8px;
+  padding-left: 10px;
+  color: #004269;
+  border: 2px solid #e3e3e3;
+  background-color: $primary-soften-color;
+  border-radius: 4px;
+  width: 100%;
+  max-width: $side-panel-width;
+  margin-bottom: -5px;
+  cursor: pointer;
+  text-decoration: none;
+
+  text-transform: uppercase;
+  font-weight: bold;
+  font-size: 12px;
+}
+.control.draggable-control {
+  padding: 3px;
+  padding-left: 20px;
+  color: black;
+  border: 2px solid #e3e3e3;
+  background-color: #fff;
+  border-radius: 4px;
+  width: 100%;
+  max-width: $side-panel-width;
+  cursor: move;
+  margin-bottom: 1px;
+  font-size: 17px;
+}
+.control.draggable-control span {
+  margin-left: 13px;
+}
+.control.draggable-control {
+  span {
+    margin-left: 5px;
+  }
+  i {
+    color: #8d8d8d;
+  }
+}
+.form-flex-checkbox-left input[type='checkbox'] {
+  margin-left: 5px;
+}
+.form-flex-checkbox-right input[type='checkbox'] {
+  margin-right: 5px;
+}
+
+.control.draggable-control:hover {
+  border: 1px solid #707070;
+}
+
+#formarea li {
+  height: 1.5em;
+  line-height: 1.2em;
+}
+#formarea div.ui-sortable-placeholder.ui-state-highlight {
+  height: 2em;
+  line-height: 1.2em;
+  box-shadow: none;
+  border: dashed 1px #ddd;
+  background: #f7f7f7;
+  width: 100%;
+  visibility: visible;
+  overflow: hidden;
+  margin: 1px 0 3px;
+}
+
+.formarea-control {
+  padding: 6px;
+  padding-left: 10px;
+  color: black;
+  border-radius: 6px;
+  width: 100%;
+  cursor: move;
+}
+
+.fb-dropable-blocks {
+  min-height: 50px;
+  border: 1px dashed #dbdbdb;
+}
+.formarea-control {
+  label {
+    padding-top: calc(0.375rem + 1px);
+    padding-bottom: calc(0.375rem + 1px);
+    margin-bottom: 0;
+    font-size: medium;
+    line-height: 1.4;
+  }
+}
+
+.category-container {
+  width: 100%;
+  padding: 6px 4px;
+}
+
+.btn-toolbar {
+  box-shadow: 0px 10px 4px rgb(190 190 190 / 60%);
+}
+
+.fb-dropable-empty-block {
+  background: #f5f9f4;
+  padding: 10px;
+  justify-content: center;
+  display: flex;
+  margin: 4px;
+  text-align: center;
+  color: #375131;
+}
+.form-field {
+  width: 100%;
+  margin-bottom: 5px;
+  border-radius: 5px;
+  padding-top: 4px;
+  padding-left: 5px;
+  background: #fff;
+
+  .field-actions {
+    display: none;
+    position: absolute;
+    top: 0px;
+    right: 0px;
+  }
+
+  > .container {
+    position: relative;
+    padding: 10px;
+  }
+}
+
+.form-field.active-control > div > .field-actions {
+  display: flex;
+}
+
+.field-required:after {
+  position: relative;
+  z-index: 10;
+}
+
+.field-required:after,
+.tab-error::after {
+  content: ' *';
+  color: #eb0000;
+  z-index: auto;
+}
+// On Display Mode
+.invalid-form-field:empty {
+  display: none;
+}
+.invalid-form-field:not(:empty) {
+  display: block;
+  color: #c90000;
+  font-weight: 500;
+  font-size: 12px;
+}
+
+// Control Edition Panel
+#preview-edition {
+  .alert.alert-danger {
+    margin-top: 1rem;
+    p {
+      margin-bottom: 1px;
+    }
+  }
+}
+
+// MODAL
+#modal-control-edition {
+  .nav-link {
+    color: $caption-color;
+  }
+  .nav-link.active {
+    color: $link-color;
+    font-weight: bold;
+  }
+}
+
+.highlight-control {
+  border: 2px solid #000;
+  box-shadow: 5px 5px;
+}
+
+.label-tooltip {
+  cursor: pointer;
+  margin-left: 5px;
+  margin-right: 5px;
+  color: #a3a3a3;
+  font-size: 13px;
+}
+
+.especial {
+  background-color: red !important;
+  color: white !important;
+}
+
+// Sortable bits
+.portlet-placeholder {
+  border: 1px dotted black;
+  margin: 0 1em 1em 0;
+  height: 50px;
+}
+.sort-handle {
+  cursor: move;
+}
+
+.dynamic-table thead > tr > th {
+  background: #ebebeb !important;
+  padding: 15px;
+  text-transform: capitalize;
+  font-weight: bold;
+}
+.dynamic-table tbody > tr > td {
+  padding: 10px;
+  text-transform: capitalize;
+  font-weight: bold;
+  align-content: center;
+  text-align: center;
+  border-bottom: 1px solid #ececec;
+}
+
+.dynamic-table tbody > tr > td:last-child {
+  border-right: 1px solid #ececec;
+}
+.dynamic-table tbody > tr > td:first-child {
+  border-left: 1px solid #ececec;
+}
+.dynamic-table tbody > tr:last-child {
+  text-align: left;
+}
+
+// HTML Editor
+.code-editor-xsmall {
+  min-height: 40px;
+}
+.code-editor-small {
+  min-height: 144px;
+}
+.code-editor-medium {
+  min-height: 200px;
+}
+
+// "Sections" Component Code
+.section-component {
+  margin-top: 5px;
+  margin-bottom: 5px;
+  .section-header {
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+    background-color: $primary-soften-color;
+    color: $primary-soften-text-color;
+    padding: 10px;
+    font-size: 18px;
+    text-transform: capitalize;
+  }
+
+  > div:nth-child(2) {
+    min-height: 56px;
+    border: 1px solid #e4e4e4;
+    border-bottom-left-radius: 5px;
+    border-bottom-right-radius: 5px;
+    border-top: none;
+    padding: 24px;
+  }
+}
+
+.editable-grid {
+  margin-top: 5px;
+  margin-bottom: 5px;
+  .editable-grid-header {
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+    background-color: $primary-soften-color;
+    color: $primary-soften-text-color;
+    padding: 10px;
+    font-size: 18px;
+    text-transform: capitalize;
+  }
+
+  > div:nth-child(2) {
+    min-height: 56px;
+    border: 1px solid #e4e4e4;
+    border-bottom-left-radius: 5px;
+    border-bottom-right-radius: 5px;
+    border-top: none;
+  }
+}
+
+// Form Editor
+.file-selector {
+  position: relative;
+  padding: 15px;
+  border: 2px dashed #ddd;
+  text-align: center;
+  &.dragover {
+    border-color: $primary;
+  }
+}
+
+.files-list .img-preview {
+  max-width: 100px;
+}
+
+// JQuery UI Datepicker
+.ui-datepicker {
+  a.ui-state-default {
+    background: #ffffff;
+    border: none;
+    text-align: center;
+  }
+
+  a.ui-state-default.ui-state-hover {
+    background: #e8e8e8;
+    border: none;
+    text-align: center;
+    border-radius: 50px;
+    font-weight: medium;
+  }
+  .ui-state-default.ui-state-active {
+    background: $primary-soften-color;
+    color: #000;
+    border: none;
+    text-align: center;
+    border-radius: 50px;
+    font-weight: bold;
+  }
+
+  .ui-datepicker-header {
+    background: $primary-soften-color;
+  }
+}
+
+// Form viewer
+
+.edit-button-group .dropdown-toggle::after {
+  display: none;
+}
