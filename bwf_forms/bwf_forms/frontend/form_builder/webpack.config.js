@@ -80,6 +80,7 @@ module.exports = {
     new webpack.ProvidePlugin({
       $: 'jquery',
       jQuery: 'jquery',
+      'window.jQuery': 'jquery' // Ensure global availability
     }),
     new MiniCssExtractPlugin({
       filename: 'css/[name].css',

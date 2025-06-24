@@ -23,13 +23,9 @@ class BwfForm(models.Model):
     name = models.CharField(max_length=255)
     slug = models.SlugField(max_length=500, unique=True, blank=True, null=True)
     description = models.TextField(blank=True, null=True)
-    active_version = models.ForeignKey(
-        "BwfFormVersion",
-        related_name="active_forms",
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-    )
+    
+    version_id = models.CharField(max_length=60, null=True, blank=True)
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     is_active = models.BooleanField(default=True)
@@ -46,12 +42,24 @@ class BwfForm(models.Model):
             self.slug = f"{self.slug}-{count + 1}"
         super(BwfForm, self).save(*args, **kwargs)
 
+    def get_json_form_structure(self):
+        form_json = {}
+        active_version = self.get_active_version()
+        if active_version and active_version.form_file:
+            with open(active_version.form_file.path) as json_file:
+                form_json = json.load(json_file)
+        return form_json
+    
+    def get_active_version(self):
+        return self.versions.filter(is_active=True).first()
+
 
 class BwfFormVersion(models.Model):
     form = models.ForeignKey(BwfForm, related_name="versions", on_delete=models.CASCADE)
     version_id = models.CharField(
         max_length=60, default=get_unique_form_version_id, unique=True
     )
+    version_number = models.IntegerField(default=1)
 
     definition = models.JSONField(blank=True, null=True)
     form_file = models.FileField(
@@ -61,11 +69,22 @@ class BwfFormVersion(models.Model):
         blank=True,
         storage=upload_storage,
     )
+    is_edition = models.BooleanField(default=True)
+    is_active = models.BooleanField(default=False)
+    activated_on = models.DateTimeField(blank=True, null=True)
+
+    is_disabled = models.BooleanField(default=False)
+    disabled_at = models.DateTimeField(null=True, blank=True)
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         unique_together = ("form", "version_id")
+
+    @property
+    def is_editable(self):
+        return self.is_edition and not self.is_active and not self.is_disabled
 
     def __str__(self):
         return f"{self.form.name} - Version {self.version_id}"
@@ -80,3 +99,12 @@ class BwfFormVersion(models.Model):
         with open(self.form_file.path, "w") as json_file:
             json.dump(definition, json_file)
         self.save()
+
+    def set_as_active_version(self):
+        self.form.versions.filter(is_active=True).update(is_active=False)
+        self.is_active = True
+        self.is_edition = False
+        self.activated_on = self.updated_at
+        self.save()
+        self.form.version_id = self.version_id
+        self.form.save()

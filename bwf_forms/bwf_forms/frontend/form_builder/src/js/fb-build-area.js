@@ -19,6 +19,7 @@ export class BuildArea {
     BuildArea.instance = this;
     this.area = this.getDropableControl('diosito');
     this.setupDropableArea();
+    this.isRendered = false;
   }
 
   static getInstance() {
@@ -30,6 +31,10 @@ export class BuildArea {
 
   setBuilder(builder) {
     this.builder = builder;
+  }
+
+  setIsRendered() {
+    this.isRendered = true;
   }
 
   setupDropableArea() {
@@ -54,7 +59,7 @@ export class BuildArea {
       this.dropables[targetAreaId].addChildControl(control);
       this.dropables[sourceAreaId].removeChildControl(controlId);
       console.log('Control transferred from', sourceAreaId, 'to', targetAreaId);
-      return { success: true };
+      return { success: true, control: control };
     }
     return { success: false };
   }
@@ -125,6 +130,17 @@ export class BuildArea {
       return this.generateAPIFieldName(`${fieldName}${seqNumber + 1}`);
     }
     return `${fieldName}${seqNumber || ''}`;
+  }
+
+  dispatchControlEvent(eventName, data) {        
+    if (!this.isRendered) return;
+    const controlEvent = new CustomEvent(eventName, {
+      bubbles: true,
+      detail: { data },
+    });
+    if (this.builder && this.builder.$builder?.length) {
+      this.builder.$builder[0].dispatchEvent(controlEvent);
+    } 
   }
 
   toJSON() {

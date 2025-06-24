@@ -97,9 +97,10 @@ var forms_dashboard = {
                   tag: "div",
                   content: [
                     {
-                      tag: "span",
+                      tag: "a",
                       content: row.name,
                       class: "",
+                      href: `/bwf/forms/form/${row.id}/`,
                     },
                   ],
                   class: "",
@@ -145,26 +146,6 @@ var forms_dashboard = {
     },
   },
   api: {
-    createForm: function (data) {
-      const _ = forms_dashboard;
-
-      return new Promise((resolve, reject) => {
-        $.ajax({
-          url: _.var.url,
-          type: "POST",
-          headers: { "X-CSRFToken": $("#csrf_token").val() },
-          contentType: "application/json",
-          data: JSON.stringify({ ...data }),
-          success: function (response) {
-            resolve(response);
-          },
-          error: function (error) {
-            alert("Error creating form");
-            reject(error);
-          },
-        });
-      });
-    },
 
     get_datatable_data: function (params, cb_success, cb_error) {
       const _ = forms_dashboard;

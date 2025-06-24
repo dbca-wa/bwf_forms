@@ -2,7 +2,7 @@ const path = require('path');
 const sourcePath = path.resolve(__dirname, '../src/')
 module.exports = {
   entry : {
-    app: path.resolve(sourcePath, 'js', 'app.js'),
+    app: path.resolve(sourcePath, 'js', 'dev.js'),
   },
   paths: {
     /* Path to source files directory */
@@ -14,6 +14,11 @@ module.exports = {
   server: {
     host: 'localhost',
     port: 8075,
+    allowedHosts: 'all',
+    
+    headers: {
+        "Access-Control-Allow-Origin": "*",
+    },
   },
   limits: {
     /* Image files size in bytes. Below this value the image file will be served as DataURL (inline base64). */

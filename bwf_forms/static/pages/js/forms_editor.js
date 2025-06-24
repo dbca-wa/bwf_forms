@@ -3,14 +3,19 @@ forms_editor = {
     url: "/bwf/forms/api/form-version",
     form_id: null,
     version_id: null,
+    version_object_id: null,
+    builder: null,
+    attempt: 0,
+    timeout: null,
   },
   elem: {},
 
-  init: function (form_id, version_id) {
+  init: function (data) {
     const _ = forms_editor;
-
+    const {form_id, version_id, version_object_id} = data
     _.var.form_id = form_id;
     _.var.version_id = version_id;
+    _.var.version_object_id = version_object_id;
 
     if (!_.var.form_id || !_.var.version_id) {
       console.error("Form ID and Version ID are required.");
@@ -20,40 +25,19 @@ forms_editor = {
     _.api
       .getForm(_.var.form_id, _.var.version_id)
       .then((data) => {
-        $('#form-editor-container').formBuilder({
-                formData: data || [],
-                // submission: {
-                //   urL: 'http://'
-                // },
-                API_KEY: 'AXAKSDHASKJDHAKSJHDLAKSHDASDFHASDHFJKL',
-                initialValue: {
-                    firstName: 'Roberto',
-                    emailField: 'robe@extremoduro.com',
-                    people: [
-                    {
-                        selectBoxes: ['john.doe@test.com'],
-                        checkboxControl: true,
-                    },
-                    ],
-                    datePicker: [new Date('2024-10-30T16:00:00.000Z'), new Date('2024-10-21T16:00:00.000Z')],
-                    table: [
-                    {
-                        textField1: 'sadf',
-                        inputNumber: 123,
-                        selectBoxes1: ['john.doe@test.com', 'jane.doe@test.com'],
-                        datePicker1: new Date('2024-11-11T16:00:00.000Z'),
-                    },
-                    ],
-                },
-                onSuccess: (data) => {
-                    console.log('Form submitted successfully:', data);
-                },
-                onError: (error) => {
-                    alert('Error submitting form. Please try again.');
-                    console.error('Form submission error:', error);
-                }
-                });
-                $('#form-editor-container').formBuilder('build');
+        const container = $("#form-editor-container");
+        container.formBuilder({
+          formStructure: data,
+          isDev: true,
+        });
+        container.formBuilder("build");
+        _.var.builder = container.formBuilder("widget");
+        container.on("formbuilder-updated", _, function (e) {
+          const _ = e.data;
+          const { structure } = e.detail;
+
+          _.debounce(_.updateStructure, 600)(structure);
+        });
       })
       .catch((error) => {
         console.error("Error fetching form data:", error);
@@ -61,6 +45,33 @@ forms_editor = {
   },
 
   render: function () {},
+
+  updateStructure: function (structure) {
+    const _ = forms_editor;
+    const { version_object_id, version_id } = _.var;
+    _.api
+      .updateFormStructure(version_object_id, version_id, structure)
+      .then((data) => {
+        console.log("Form structure updated successfully:", data);
+      })
+      .catch((error) => {
+        console.error("Error updating form structure:", error);
+      });
+  },
+
+  debounce: function (func, delay) {
+    const _ = forms_editor;
+
+    if (_.var.timeout) {
+      clearTimeout(_.var.timeout);
+    }
+
+    return function (...args) {
+      const context = this;
+      clearTimeout(_.var.timeout);
+      _.var.timeout = setTimeout(() => func.apply(context, args), delay);
+    };
+  },
 
   api: {
     getForm: function (form_id, version_id) {
@@ -81,17 +92,20 @@ forms_editor = {
       });
     },
 
-    updateDefinition: function (form_id, version_id, definition) {
+    updateFormStructure: function (version_object_id, version_id, structure) {
       const _ = forms_editor;
       const data = {
-        definition: definition,
+        form_structure: structure,
       };
       return new Promise((resolve, reject) => {
         $.ajax({
-          url: `${_.var.url}/${form_id}/?version_id=${version_id}`,
+          url: `${_.var.url}/${version_object_id}/?version_id=${version_id}`,
           type: "PUT",
           contentType: "application/json",
           data: JSON.stringify(data),
+          headers: {
+            "X-CSRFToken": $("#csrf_token").val(),
+          },
           success: function (data) {
             resolve(data);
           },
@@ -101,5 +115,25 @@ forms_editor = {
         });
       });
     },
+
+    markActiveVersion: function () {
+      const _ = forms_editor;
+      const { form_id, version_id, version_object_id} = _.var;
+      return new Promise((resolve, reject) => {
+        $.ajax({
+          url: `${_.var.url}/${version_object_id}/mark_form_active_version/?version_id=${version_id}`,
+          type: "POST",
+          headers: {
+            "X-CSRFToken": $("#csrf_token").val(),
+          },
+          success: function (data) {
+            resolve(data);
+          },
+          error: function (xhr, status, error) {
+            reject(error);
+          },
+        });
+      });
+    }
   },
 };

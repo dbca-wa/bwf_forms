@@ -57,11 +57,12 @@
   </div>
 </div>
 <script src="/static/pages/js/forms_dashboard.js"></script>
+<script src="/static/pages/js/bwf_form.js"></script>
 
 {% include "modals/new_form_modal.html" %}
 <script>
   $(() => {
-    forms_dashboard.init();
+    bwf_form.init();
   });
 </script>
 {% else %}

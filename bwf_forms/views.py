@@ -1,21 +1,26 @@
 import json
-import uuid
+import mimetypes
+import logging
 
 from django.shortcuts import get_object_or_404
-from rest_framework.decorators import action
-from django.shortcuts import render
-from rest_framework import viewsets
+from rest_framework.decorators import action, permission_classes, api_view
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework import viewsets, status
 from rest_framework.response import Response
 
+from django.core.paginator import Paginator
 from django.core.files.base import ContentFile
-from django.db.models import Prefetch, Q
+from django.db import transaction
+from django.db.models import Prefetch, Q, Max
 from django.http import JsonResponse
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.views import View
 
 from bwf_forms.models import BwfForm, BwfFormVersion
 from bwf_forms import serializers
+from bwf_forms.utils import set_form_active_version
 
+logger = logging.getLogger(__name__)
 
 
 class HomeView(View):
@@ -28,8 +33,39 @@ class HomeView(View):
         return render(request, self.template_name, context=context)
 
 
+class FormView(View):
+
+    template_name = "bwf_forms/form_detail.html"
+    def get(self, request, *args, **kwargs):
+        form_id = kwargs.get("form_id")
+
+        form = get_object_or_404(BwfForm, pk=form_id)
+        versions = (
+            form.versions.all()
+            .only(
+                "form_id",
+                "version_number",
+                "version_id",
+                "created_at",
+                "updated_at",
+            )
+            .order_by("is_active", "-updated_at")
+        )
+        active_version = versions.filter(is_active=True).first()
+        versions = (
+            versions.exclude(pk=active_version.pk) if active_version else versions
+        )
+        context = {
+            "form": form,
+            "active_version": active_version,
+            "versions": versions,
+        }
+
+        return render(request, self.template_name, context=context)
+
+
 class EditorView(View):
-    template_name = "bwf_forms/editor.html"
+    template_name = "bwf_forms/form_edition.html"
 
     def get(self, request, *args, **kwargs):
 
@@ -45,22 +81,56 @@ class EditorView(View):
                 form = None
         else:
             # If form_id is provided, fetch the form directly
-            form  = BwfForm.objects.filter(pk=form_id).first()
-            version = form.active_version if form else None
+            form = BwfForm.objects.filter(pk=form_id).first()
+            version = form.get_active_version() if form else None
             version_id = version.version_id if version else None
-        
+
         context = {
             "form_id": form_id,
             "version_id": version_id,
-            "is_new": form_id is None,
-            "USE_DEV": True,
-            "DEV_URL": "http://localhost:8000",
+            "version_object_id": version.id if version else None,
 
+
+            "form": form,
+            "version": version,
+            "USE_DEV": True,
+            "DEV_URL": "http://localhost:8075",
         }
         if form:
             context["form"] = serializers.FormSerializer(form).data
 
         return render(request, self.template_name, context=context)
+
+class FormHistoryView(View):
+    template_name = "bwf_forms/form_history.html"
+
+    def get(self, request, *args, **kwargs):
+        form_id = kwargs.get("form_id")
+
+        form = get_object_or_404(BwfForm, pk=form_id)
+        versions = (
+            form.versions.all()
+            .only(
+                "form_id",
+                "version_number",
+                "version_id",
+                "created_at",
+                "updated_at",
+            )
+            .order_by("is_active", "-updated_at")
+        )
+        active_version = versions.filter(is_active=True).first()
+        versions = (
+            versions.exclude(pk=active_version.pk) if active_version else versions
+        )
+        context = {
+            "form": form,
+            "active_version": active_version,
+            "versions": versions,
+        }
+
+        return render(request, self.template_name, context=context)
+
 
 
 class FormVisualizerView(View):
@@ -78,12 +148,8 @@ class FormsAPIViewset(viewsets.ModelViewSet):
     API endpoint that allows forms to be viewed or edited.
     """
 
-    queryset = BwfForm.objects.all().prefetch_related(
-        Prefetch(
-            "versions", queryset=BwfFormVersion.objects.all().order_by("-created_at")
-        )
-    )
-    serializer_class = serializers.FormBasicSerializer
+    queryset = BwfForm.objects.all()
+    serializer_class = serializers.FormSerializer
 
     def create(self, request, *args, **kwargs):
         serializer = serializers.CreateFormSerializer(data=request.data)
@@ -97,41 +163,51 @@ class FormsAPIViewset(viewsets.ModelViewSet):
             name=name,
             description=description,
         )
-        
 
-        # Create a new form version with the provided definition
-        version  = BwfFormVersion.objects.create(
-            form=instance,
-            definition=serializer.validated_data.get("definition"),
-        )
-        # save definition as json
-        json_data = json.dumps("[]", indent=4)
-        temp_name = str(uuid.uuid4())
-        file_name = f"form_{temp_name}.json"
+        version = BwfFormVersion.objects.create(form=instance)
+        json_data = json.dumps("", indent=4)
+
+        file_name = f"form_{version.version_id}.json"
         version.form_file.save(file_name, ContentFile(json_data))
 
-        instance.active_version = version
-        instance.save()
-
-        return Response(serializers.FormVersionSerializer(version).data, status=201)
-
-    def update(self, request, *args, **kwargs):
-
-        instance = self.get_object()
-        serializer = serializers.UpdateFormDefinitionSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        definition = serializer.validated_data.get("definition")
-        # Update the form's definition
-
-        return JsonResponse(
-            {
-                "message": "Form definition updated successfully",
-                "form_id": instance.form_id,
-                "definition": definition,
-            },
-            status=200,
+        return Response(
+            serializers.FormVersionSerializer(version).data,
+            status=status.HTTP_201_CREATED,
         )
 
+    def list(self, request, *args, **kwargs):
+
+        page_param = request.GET.get("page", "1")
+        page_size_param = request.GET.get("page_size", "10")
+
+        search = request.GET.get("search", "")
+        form_versions_queryset = (
+            BwfFormVersion.objects.filter(is_disabled=False)
+            .filter(Q(is_edition=True) | Q(is_active=True))
+            .only(
+                "form_id",
+                "version_id",
+                "created_at",
+                "updated_at",
+            )
+            .order_by("is_active", "-updated_at")
+        )
+        bwf_forms = BwfForm.objects.all().prefetch_related(
+            Prefetch("versions", queryset=form_versions_queryset)
+        )
+
+        if search != "":
+            bwf_forms = bwf_forms.filter(name__icontains=search)
+        paginator = Paginator(bwf_forms, page_size_param)
+        page = paginator.page(page_param)
+        return JsonResponse(
+            {
+                "count": paginator.count,
+                "hasPrevious": page.has_previous(),
+                "hasNext": page.has_next(),
+                "results": self.get_serializer(page.object_list, many=True).data,
+            }
+        )
 
 
 class FormVersionAPIViewset(viewsets.ModelViewSet):
@@ -146,59 +222,113 @@ class FormVersionAPIViewset(viewsets.ModelViewSet):
         serializer = serializers.CreateFormVersionSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        form = serializer.validated_data.get("form")
-        definition = serializer.validated_data.get("definition")
+        form_id = serializer.validated_data.get("form_id")
+        version_id = serializer.validated_data.get("version_id", None)
+        json_form = json.dumps("")
+        if version_id:
+            parent_version = get_object_or_404(
+                BwfFormVersion, version_id=version_id, form__id=form_id
+            )
+            instance = parent_version.form
+            json_form = parent_version.get_json_form_structure()
+        else:
+            instance = get_object_or_404(BwfForm, id=form_id)
 
-        # Create a new form version
-        version = BwfFormVersion.objects.create(
-            form=form,
-            definition=definition,
-        )
+        version_number = instance.versions.aggregate(
+            version_number=Max("version_number")
+        ).get("version_number", 0)
+        version_number = version_number + 1 if version_number else 1
+        try:
+            with transaction.atomic():
+                version = BwfFormVersion.objects.create(
+                    form=instance,
+                )
+                file_name = f"form_{version.version_id}.json"
+                version.form_file.save(file_name, ContentFile(json_form))
+            return Response(
+                serializers.FormVersionSerializer(version).data,
+                status=status.HTTP_201_CREATED,
+            )
+        except Exception as e:
+            return JsonResponse(
+                {"error": "Failed to create form version", "details": str(e)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
-        return Response(serializers.FormVersionSerializer(version).data, status=201)
-    
     def update(self, request, *args, **kwargs):
-        instance = get_object_or_404(BwfFormVersion, version_id=kwargs.get("pk"))
+        instance = get_object_or_404(BwfFormVersion, pk=kwargs.get("pk"))
         serializer = serializers.UpdateFormDefinitionSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        definition = serializer.validated_data.get("definition")
-        
+        form_structure = serializer.validated_data.get("form_structure")
+
         # Update the form version's definition
-        instance.set_json_form_definition(definition)
-        instance.save()
+        instance.set_json_form_structure(form_structure)
 
         return JsonResponse(
             {
                 "message": "Form version definition updated successfully",
                 "version_id": instance.version_id,
-                "definition": definition,
             },
-            status=200,
+            status=status.HTTP_200_OK,
         )
 
-    def retrieve(self, request, *args, **kwargs):
-        pk = kwargs.get("pk")
-        version_id = request.query_params.get("version_id", None)
-
-        version = BwfFormVersion.objects.filter(version_id=version_id, form__id = pk).first()
-        if not version:
-            return JsonResponse(
-                {"error": "Form version not found"}, status=404
-            )
-        
-        return super().retrieve(request, *args, **kwargs)
-    
     @action(detail=True, methods=["get"])
     def get_json_form(self, request, pk=None):
         """
         Retrieve the JSON structure of a form version.
         """
         version_id = request.query_params.get("version_id", None)
-        version = BwfFormVersion.objects.filter(version_id=version_id, form__id = pk).first()
+        version = BwfFormVersion.objects.filter(
+            version_id=version_id, form__id=pk
+        ).first()
 
         json_structure = version.get_json_form_structure()
-        
+
         if json_structure is None:
-            return JsonResponse({"error": "No JSON structure found for this version"}, status=404)
+            return JsonResponse(
+                {"error": "No JSON structure found for this version"}, status=404
+            )
 
         return JsonResponse(json_structure, safe=False)
+
+    @action(detail=True, methods=["POST"])
+    def mark_form_active_version(self, request, *args, **kwargs):
+        version_id = request.query_params.get("version_id", None)
+        version = get_object_or_404(
+            BwfFormVersion, pk=kwargs.get("pk"), version_id=version_id
+        )
+        try:
+            # TODO: Validate form
+            set_form_active_version(version)
+        except Exception as e:
+            logger.error(f"Error setting active version: {str(e)}")
+            return JsonResponse(
+                {"success": False, "message": str(e)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        return JsonResponse({"success": True, "message": "Active version changed"})
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def get_form_structure_file(request, id, version_id):
+    bwf_form = get_object_or_404(BwfForm, id=id)
+    file = None
+    if version_id:
+        bwf_form = get_object_or_404(BwfForm, id=id)
+        version = get_object_or_404(
+            BwfFormVersion, form=bwf_form, version_id=version_id
+        )
+        file = version.form_file
+
+    if file is None:
+        return Response("File doesn't exist", status=status.HTTP_404_NOT_FOUND)
+
+    file_data = None
+    try:
+        with open(file.path, "rb") as f:
+            file_data = f.read()
+            f.close()
+    except Exception as e:
+        return render(request, "govapp/404.html", context={})
+    return Response(file_data, content_type=mimetypes.types_map[".json"])

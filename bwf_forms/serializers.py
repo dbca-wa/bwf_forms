@@ -19,13 +19,13 @@ class CreateFormSerializer(serializers.Serializer):
 
 
 class UpdateFormDefinitionSerializer(serializers.Serializer):
-    definition = serializers.JSONField(required=True)
+    form_structure = serializers.JSONField(required=True)
 
 
 class FormBasicSerializer(serializers.ModelSerializer):
     class Meta:
         model = BwfForm
-        fields = ["id", "name", "slug", "description", "created_at", "updated_at"]
+        fields = ["id", "name", "slug", "version_id", "description", "created_at", "updated_at"]
 
 
 class FormVersionSerializer(serializers.ModelSerializer):
@@ -33,11 +33,9 @@ class FormVersionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = BwfFormVersion
-        fields = ["id", "version_id", "form", "created_at", "updated_at"]
+        fields = ["id", "version_id", "is_active", "is_edition", "form", "created_at", "updated_at"]
 
 
-class CreateFormVersionSerializer(ModelSerializer):
-    class Meta:
-        model = BwfFormVersion
-        fields = ("form", "definition")
-        read_only_fields = ("created_at", "updated_at", "version_number")
+class CreateFormVersionSerializer(serializers.Serializer):
+    form_id = serializers.IntegerField()
+    version_id = serializers.CharField(required=False)

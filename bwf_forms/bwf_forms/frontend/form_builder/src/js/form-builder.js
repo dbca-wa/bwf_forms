@@ -4,14 +4,11 @@ import LayoutController from './layout';
 
 import { FORM_CONTROLS } from '../controls/toolbox';
 import ViewerLayoutController from './viewer-layout';
+import { CUSTOM_EVENTS } from '../controls/utils/constants';
 
 /* eslint-disable no-plusplus */
 class FormBuilder {
   constructor(element, settings, $) {
-    console.log('FormBuilder initialized', {
-      element,
-      settings,
-    });
     var _ = this;
 
     _.defaults = {
@@ -22,10 +19,20 @@ class FormBuilder {
 
     _.initials = {
       present: true,
+      isDev: settings.isDev || false,
+      formStructure: settings.formStructure || [],
       formData: settings.formData || [],
       submissionData: settings.submissionData || {},
       onSuccess: settings.onSuccess || undefined,
       onError: settings.onError || undefined,
+      changeEvents: [
+        CUSTOM_EVENTS.CONTROL_ADDED,
+        CUSTOM_EVENTS.CONTROL_SAVED,
+        CUSTOM_EVENTS.CONTROL_TRANSFERRED,
+        CUSTOM_EVENTS.CONTROl_SORTED,
+        CUSTOM_EVENTS.CONTROL_DELETED,
+        CUSTOM_EVENTS.CONTROL_DUPLICATED,
+      ],
     };
     $.extend(_, _.initials);
 
@@ -44,10 +51,25 @@ class FormBuilder {
     _.originalSettings = _.options;
   }
 
-  build() {
+  eventHandlers() {
     const _ = this;
-    _.layout.renderFormBuilder();
-    _.$builder.find('#btn-load-form').trigger('click');
+
+    _.$builder.on(_.initials.changeEvents.join(' '), _, (e) => {
+      const _ = e.data;
+
+      const formData = _.layout.buildArea.toJSON();
+      const formEvent = new CustomEvent(CUSTOM_EVENTS.FORM_UPDATED, {
+        detail: { structure: formData },
+      });
+      _.$builder[0].dispatchEvent(formEvent);
+    });
+  }
+
+  build(options = {}) {
+    const _ = this;
+    const formStructure = options.formStructure || _.initials.formStructure;
+    _.layout.renderFormBuilder(formStructure);
+    _.eventHandlers();
   }
 
   render(options = {}) {
@@ -75,7 +97,7 @@ class FormBuilder {
             'Content-Type': 'application/json',
             ...headers,
           },
-          body: JSON.stringify({ form_data: {...Object.fromEntries(formData)}, ...preData }),
+          body: JSON.stringify({ form_data: { ...Object.fromEntries(formData) }, ...preData }),
         })
           .then((response) => response.json())
           .then((data) => {

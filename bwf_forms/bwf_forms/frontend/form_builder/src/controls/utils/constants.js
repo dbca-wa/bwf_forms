@@ -36,3 +36,14 @@ export const DATE_PERIOD_TYPES = {
   MONTH: { value: 'month', label: 'Month' },
   YEAR: { value: 'year', label: 'Year' },
 };
+
+
+export const CUSTOM_EVENTS = {
+  FORM_UPDATED: 'formbuilder-updated',
+  CONTROL_ADDED: 'fb-control-added',
+  CONTROL_SAVED: 'fb-control-saved',
+  CONTROL_TRANSFERRED: 'fb-control-transferred',
+  CONTROl_SORTED: 'fb-control-sorted',
+  CONTROL_DELETED: 'fb-control-deleted',
+  CONTROL_DUPLICATED: 'fb-control-duplicated',
+}

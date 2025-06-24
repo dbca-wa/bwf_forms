@@ -1,4 +1,4 @@
-{% extends 'govapp/base.html' %} {% block content %} {% if error_message %}
+{% block content %} {% if error_message %}
 <div class="alert alert-danger alert-dismissible fade show" role="alert">
   {{error_message}}
   <button
@@ -10,9 +10,9 @@
 </div>
 {% endif %} {% if request.user.is_authenticated is True %}
 <input type="hidden" id="csrf_token" value="{{ csrf_token }}" />
-<input type="hidden" id="form_id" value="{{ form_id }}" />
-<input type="hidden" id="version_id" value="{{ version_id }}" />
-<input type="hidden" id="version_object_id" value="{{ version_object_id }}" />
+<input type="hidden" id="form_id" value="{{ form.id }}" />
+<input type="hidden" id="version_id" value="{{ version.version_id }}" />
+<input type="hidden" id="version_object_id" value="{{ version.id }}" />
 
 <div class="container-sm">
   <div class="d-flex justify-content-between">
@@ -90,7 +90,19 @@ DEV_URL -->
     forms_editor.init({ form_id, version_id, version_object_id });
 
     $("#btn-mark-active-version").on("click", () => {
-      forms_editor.markActiveVersion();
+
+      forms_editor.api.markActiveVersion(form_id, version_id)
+        .then((response) => {
+          if (response.success) {
+            window.location.reload();
+          } else {
+            alert("Failed to mark as active version: " + response.message);
+          }
+        })
+        .catch((error) => {
+          console.error("Error marking active version:", error);
+          alert("An error occurred while marking the active version.");
+        });
     });
 
     $("#btn-view-json").on("click", function () {

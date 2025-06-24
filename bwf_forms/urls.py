@@ -17,21 +17,42 @@ Including another URLconf
 
 from django.shortcuts import redirect
 from django.urls import path, include
-from .views import HomeView, EditorView, FormsAPIViewset, FormVersionAPIViewset
+from django import urls
+from .views import (
+    HomeView,
+    EditorView,
+    FormView,
+    FormHistoryView,
+    FormsAPIViewset,
+    FormVersionAPIViewset,
+    get_form_structure_file,
+)
+
 # In your project's urls.py
 from rest_framework.routers import DefaultRouter
 
 
 router = DefaultRouter()
-router.register(r'form', FormsAPIViewset)
-router.register(r'form-version', FormVersionAPIViewset)
+router.register(r"form", FormsAPIViewset)
+router.register(r"form-version", FormVersionAPIViewset)
 
 
 urlpatterns = [
-    path('', lambda request: redirect('bwf_forms_home', permanent=True)),
-    path('home/', HomeView.as_view(), name='bwf_forms_home'),
-    path('editor/', EditorView.as_view(), name='form_editor'),
-    path('editor/<int:form_id>/', EditorView.as_view(), name='form_editor_with_id'),
-    path('editor/<str:version_id>/', EditorView.as_view(), name='form_editor_with_version_id'),
-    path('api/', include(router.urls)),
+    path("", lambda request: redirect("bwf_forms_home", permanent=True)),
+    path("home/", HomeView.as_view(), name="bwf_forms_home"),
+    path("form/<int:form_id>/", FormView.as_view(), name="form_info"),
+    path('form/<int:form_id>/history', FormHistoryView.as_view(), name='version-history'),
+    path("editor/", EditorView.as_view(), name="form_editor"),
+    path("editor/<int:form_id>/", EditorView.as_view(), name="form_editor_with_id"),
+    path(
+        "editor/<str:version_id>/",
+        EditorView.as_view(),
+        name="form_editor_with_version_id",
+    ),
+    urls.re_path(
+        r"^structures/(?P<id>\d+)/edition/(?P<version>\d+)/(\w+|\-+|)+.json$",
+        get_form_structure_file,
+        name="get_form_structure_file",
+    ),
+    path("api/", include(router.urls)),
 ]

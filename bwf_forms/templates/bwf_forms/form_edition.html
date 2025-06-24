@@ -1,0 +1,10 @@
+{% extends 'govapp/bwf_base.html' %} {% block content %}
+<input type="hidden" id="is_edition" value="true" />
+<input
+  type="hidden"
+  id="version_data"
+  data-version-file="{{version.form_file}}"
+  data-is-editable="{{version.is_editable}}"
+/>
+{% include "bwf_forms/form_builder.html" with form=form version=version %} 
+{% endblock %}

@@ -1,0 +1,85 @@
+{% extends 'govapp/bwf_base.html' %} {% block content %}
+
+<div class="container-sm">
+  <input type="hidden" id="form_id" value="{{form.id}}" />
+  <input type="hidden" id="version_id" value="{{active_version.version_id}}" />
+  <input type="hidden" id="csrf_token" value="{{ csrf_token }}" />
+  <input
+    type="hidden"
+    id="version_data"
+    data-version-file="{{active_version.form_file}}"
+    data-is-editable="{{active_version.is_editable}}"
+  />
+  <div class="mb-2">
+    <div style="display: inline-flex">
+      <h4 class="card-title">
+        {{form.name}}
+      </h4>
+    </div>
+    <div class="d-flex">
+      <span class="text-secondary ms-2">
+        Version number: {{active_version.version_number}}</span
+      >
+      <div class="d-flex ms-3">
+        {% if active_version.is_active %}
+        <div><span class="badge bg-success">Active</span></div>
+        {% endif %}
+        <br />
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-body">
+      <ul class="nav nav-tabs mb-4 mt">
+        <li class="nav-item">
+          <a class="nav-link active" href="{% url 'form_info' form.id %}">
+            <i class="bi bi-bookmark-star me-1"></i>Active Form</a
+          >
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'version-history' form.id %}">
+            <i class="bi bi-clock-history me-1"></i>Version history</a
+          >
+        </li>
+      </ul>
+      <div class="row p-2">
+        <div class="col-12">
+          {% if active_version %} 
+            {% include "bwf_forms/form_builder.html" with form=form version=active_version visualization=True %}
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  $(() => {
+    const form_id = $("#form_id").val();
+    const version_id = $("#version_id").val();
+
+    $("#btn-create-version").on("click", function () {
+      if ($(this).attr("disabled")) return;
+      $(this).attr("disabled", true);
+      const api_data = {
+        version_id,
+        form_id,
+        name: `Untitled`,
+      };
+      bwf_form.api
+        .createFormVersion(api_data)
+        .then((response) => {
+          $(this).attr("disabled", false);
+          bwf_form.navigate.toVersionEdition(
+            response.form.id,
+            response.id
+          );
+        })
+        .catch((error) => {
+          console.error(error);
+          $(this).attr("disabled", false);
+        });
+    });
+  });
+</script>
+{% endblock %}

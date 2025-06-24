@@ -5,7 +5,7 @@ import { DropableDisplayProps } from '../config-properties/display-props/layout-
 import LayoutControl from '../fb-layout-control';
 import { getControlFromToolbox } from '../toolbox-store';
 
-import { CLASS_DROPABLE_BLOCKS, CLASS_EMPTY_DROPABLE } from '../utils/constants';
+import { CLASS_DROPABLE_BLOCKS, CLASS_EMPTY_DROPABLE, CUSTOM_EVENTS } from '../utils/constants';
 import { CONTROL_PROPS_TYPES, LAYOUT_CONTROL_PROPS_TYPES } from '../utils/control-props-types';
 import { LAYOUT_TYPES } from '../utils/layout-types';
 
@@ -69,6 +69,10 @@ export class DropableControl extends LayoutControl {
     const control = this.getChildControl(controlId);
     if (control) {
       this.children.sort((a, b) => {
+        if (!$(`#${a.id}`).closest('.form-field').length || !$(`#${b.id}`).closest('.form-field').length) {
+          // tracking a bug
+          debugger;
+        }
         const aTop = $(`#${a.id}`).closest('.form-field').offset().top;
         const bTop = $(`#${b.id}`).closest('.form-field').offset().top;
         return aTop - bTop;
@@ -120,6 +124,7 @@ export class DropableControl extends LayoutControl {
       if (!ui.sender) {
         const { controlId } = ui.item[0].dataset;
         _this.reOrderChildControl(controlId);
+        BuildArea.getInstance().dispatchControlEvent(CUSTOM_EVENTS.CONTROl_SORTED, _this);
         return;
       }
       if (ui.sender.hasClass(CLASS_DROPABLE_BLOCKS) || this !== event.target) return;
@@ -150,10 +155,11 @@ export class DropableControl extends LayoutControl {
       const { areaId: sourceAreaId } = ui.sender[0].dataset;
       const { areaId: targetAreaId } = _this.$c[0].dataset;
       const { controlId } = ui.item[0].dataset;
-      const { revert } = _this.area.transferControl(controlId, sourceAreaId, targetAreaId);
+      const { revert, control } = _this.area.transferControl(controlId, sourceAreaId, targetAreaId);
       if (revert) {
         ui.sender.sortable('cancel');
       }
+      if (control) BuildArea.getInstance().dispatchControlEvent(CUSTOM_EVENTS.CONTROL_TRANSFERRED, control);
     });
   }
 
@@ -188,6 +194,8 @@ export class DropableControl extends LayoutControl {
     this.insertControl(areaContainer, control, nodeOffset);
     this.addChildControl(control);
     this.onDrop(control);
+
+    BuildArea.getInstance().dispatchControlEvent(CUSTOM_EVENTS.CONTROL_ADDED, control);
   }
 
   onDrop(control) {
@@ -203,6 +211,7 @@ export class DropableControl extends LayoutControl {
 
           control.renderInParent(container);
           console.log('Control saved', control.toJSON());
+          BuildArea.getInstance().dispatchControlEvent(CUSTOM_EVENTS.CONTROL_SAVED, control);
         } catch (error) {
           console.log('Error saving control', error);
         }
@@ -211,6 +220,7 @@ export class DropableControl extends LayoutControl {
         const { control } = controlEditor;
         console.log('Control deleted', control.toJSON());
         BuildArea.getInstance().removeControl(control);
+        BuildArea.getInstance().dispatchControlEvent(CUSTOM_EVENTS.CONTROL_DELETED, control);
       },
       onDuplicate: function (controlEditor) {
         const { control } = controlEditor;
