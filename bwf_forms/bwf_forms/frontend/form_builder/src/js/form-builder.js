@@ -72,6 +72,12 @@ class FormBuilder {
     _.eventHandlers();
   }
 
+  view(options = {}) {
+    const _ = this;
+    const formStructure = options.formStructure || _.initials.formStructure;
+    _.layout.renderFormViewer(formStructure);
+  }
+
   render(options = {}) {
     const fb = this;
     this.viewer = new ViewerLayoutController(fb);

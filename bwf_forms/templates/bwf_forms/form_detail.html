@@ -8,7 +8,7 @@
     type="hidden"
     id="version_data"
     data-version-file="{{active_version.form_file}}"
-    data-is-editable="{{active_version.is_editable}}"
+    data-is-editable="{{active_version.is_editable|yesno:'true,false'}}"
   />
   <div class="mb-2">
     <div style="display: inline-flex">
@@ -72,7 +72,7 @@
           $(this).attr("disabled", false);
           bwf_form.navigate.toVersionEdition(
             response.form.id,
-            response.id
+            response.version_id
           );
         })
         .catch((error) => {

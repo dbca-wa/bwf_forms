@@ -82,6 +82,24 @@ export default class LayoutController {
     });
   }
 
+  renderFormViewer(initialJson = []) {
+    this.initialBuilderLayout();
+    this.buildArea.clearAreaContainer();
+
+    initialJson.forEach((control) => {
+      try {
+        const element = instantiateJsonControl(control);
+
+        this.buildArea.area.addControl(this.buildArea.area.$c, element);
+      } catch (error) {
+        console.error(error);
+      }
+    });
+    this.adjustNavBar(false);
+    this.buildArea.setIsRendered();
+    this.enableViewMode();
+  }
+
   renderFormBuilder(initialJson = []) {
     this.initialBuilderLayout();
     this.buildArea.clearAreaContainer();
@@ -95,8 +113,18 @@ export default class LayoutController {
         console.error(error);
       }
     });
+    this.adjustNavBar(true);
+
     this.buildArea.area.toggleEmptyDropableControl();
     this.buildArea.setIsRendered();
+  }
+
+  adjustNavBar(show = true) {
+    if (show) {
+      $(`#form-builder-navbar .navbar-title`).html("Form Editor");
+    } else {
+      $(`#form-builder-navbar .navbar-title`).html("Form Viewer");
+    }
   }
 
   addMenuButtonsEvents() {

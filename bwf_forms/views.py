@@ -15,6 +15,7 @@ from django.db.models import Prefetch, Q, Max
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.views import View
+from django.conf import settings
 
 from bwf_forms.models import BwfForm, BwfFormVersion
 from bwf_forms import serializers
@@ -59,6 +60,8 @@ class FormView(View):
             "form": form,
             "active_version": active_version,
             "versions": versions,
+            "USE_DEV": settings.BWF_FORMS_USE_DEV,
+            "DEV_URL": settings.BWF_FORMS_DEV_URL,
         }
 
         return render(request, self.template_name, context=context)
@@ -93,8 +96,8 @@ class EditorView(View):
 
             "form": form,
             "version": version,
-            "USE_DEV": True,
-            "DEV_URL": "http://localhost:8075",
+            "USE_DEV": settings.BWF_FORMS_USE_DEV,
+            "DEV_URL": settings.BWF_FORMS_DEV_URL,
         }
         if form:
             context["form"] = serializers.FormSerializer(form).data
@@ -230,7 +233,7 @@ class FormVersionAPIViewset(viewsets.ModelViewSet):
                 BwfFormVersion, version_id=version_id, form__id=form_id
             )
             instance = parent_version.form
-            json_form = parent_version.get_json_form_structure()
+            json_form = json.dumps(parent_version.get_json_form_structure(), indent=4)
         else:
             instance = get_object_or_404(BwfForm, id=form_id)
 

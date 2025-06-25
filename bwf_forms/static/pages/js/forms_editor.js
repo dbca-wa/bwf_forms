@@ -4,6 +4,7 @@ forms_editor = {
     form_id: null,
     version_id: null,
     version_object_id: null,
+    is_edition: true,
     builder: null,
     attempt: 0,
     timeout: null,
@@ -12,10 +13,11 @@ forms_editor = {
 
   init: function (data) {
     const _ = forms_editor;
-    const {form_id, version_id, version_object_id} = data
+    const { form_id, version_id, version_object_id, is_edition } = data;
     _.var.form_id = form_id;
     _.var.version_id = version_id;
     _.var.version_object_id = version_object_id;
+    _.var.is_edition = is_edition;
 
     if (!_.var.form_id || !_.var.version_id) {
       console.error("Form ID and Version ID are required.");
@@ -30,7 +32,11 @@ forms_editor = {
           formStructure: data,
           isDev: true,
         });
-        container.formBuilder("build");
+        if (_.var.is_edition) {
+          container.formBuilder("build");
+        } else {
+          container.formBuilder("view");
+        }
         _.var.builder = container.formBuilder("widget");
         container.on("formbuilder-updated", _, function (e) {
           const _ = e.data;
@@ -118,7 +124,7 @@ forms_editor = {
 
     markActiveVersion: function () {
       const _ = forms_editor;
-      const { form_id, version_id, version_object_id} = _.var;
+      const { form_id, version_id, version_object_id } = _.var;
       return new Promise((resolve, reject) => {
         $.ajax({
           url: `${_.var.url}/${version_object_id}/mark_form_active_version/?version_id=${version_id}`,
@@ -134,6 +140,6 @@ forms_editor = {
           },
         });
       });
-    }
+    },
   },
 };
