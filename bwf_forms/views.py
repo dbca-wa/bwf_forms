@@ -245,6 +245,7 @@ class FormVersionAPIViewset(viewsets.ModelViewSet):
             with transaction.atomic():
                 version = BwfFormVersion.objects.create(
                     form=instance,
+                    version_number=version_number,
                 )
                 file_name = f"form_{version.version_id}.json"
                 version.form_file.save(file_name, ContentFile(json_form))

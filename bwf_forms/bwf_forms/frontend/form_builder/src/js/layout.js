@@ -120,10 +120,15 @@ export default class LayoutController {
   }
 
   adjustNavBar(show = true) {
+    const navbar = $(`#form-builder-navbar`);
     if (show) {
-      $(`#form-builder-navbar .navbar-title`).html("Form Editor");
+      navbar.find('.navbar-title').html("Form Editor");
+      navbar.find('.dropdown-toggle').show();
+      navbar.find('#btn-mode').show();
     } else {
-      $(`#form-builder-navbar .navbar-title`).html("Form Viewer");
+      navbar.find('.navbar-title').html("Form Viewer");
+      navbar.find('.dropdown-toggle').hide();
+      navbar.find('#btn-mode').hide();
     }
   }
 
