@@ -60,8 +60,8 @@ class FormView(View):
             "form": form,
             "active_version": active_version,
             "versions": versions,
-            "USE_DEV": settings.BWF_FORMS_USE_DEV,
-            "DEV_URL": settings.BWF_FORMS_DEV_URL,
+            "BWF_FORMS_USE_DEV": settings.BWF_FORMS_USE_DEV,
+            "BWF_FORMS_DEV_URL": settings.BWF_FORMS_DEV_URL,
         }
 
         return render(request, self.template_name, context=context)
@@ -92,17 +92,16 @@ class EditorView(View):
             "form_id": form_id,
             "version_id": version_id,
             "version_object_id": version.id if version else None,
-
-
             "form": form,
             "version": version,
-            "USE_DEV": settings.BWF_FORMS_USE_DEV,
-            "DEV_URL": settings.BWF_FORMS_DEV_URL,
+            "BWF_FORMS_USE_DEV": settings.BWF_FORMS_USE_DEV,
+            "BWF_FORMS_DEV_URL": settings.BWF_FORMS_DEV_URL,
         }
         if form:
             context["form"] = serializers.FormSerializer(form).data
 
         return render(request, self.template_name, context=context)
+
 
 class FormHistoryView(View):
     template_name = "bwf_forms/form_history.html"
@@ -135,15 +134,11 @@ class FormHistoryView(View):
         return render(request, self.template_name, context=context)
 
 
-
-class FormVisualizerView(View):
-    template_name = "bwf_forms/visualizer.html"
-
-    def get(self, request, *args, **kwargs):
-
-        context = {}
-
-        return render(request, self.template_name, context=context)
+"""
+------------------------------------------------------------------------------------------------------------
+                                        Start: api
+------------------------------------------------------------------------------------------------------------
+"""
 
 
 class FormsAPIViewset(viewsets.ModelViewSet):
