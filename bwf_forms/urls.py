@@ -41,7 +41,7 @@ urlpatterns = [
     path("", lambda request: redirect("bwf_forms_home", permanent=True)),
     path("home/", HomeView.as_view(), name="bwf_forms_home"),
     path("form/<int:form_id>/", FormView.as_view(), name="form_info"),
-    path('form/<int:form_id>/history', FormHistoryView.as_view(), name='version-history'),
+    path('form/<int:form_id>/history/', FormHistoryView.as_view(), name='form_version_history'),
     path("editor/", EditorView.as_view(), name="form_editor"),
     path("editor/<int:form_id>/", EditorView.as_view(), name="form_editor_with_id"),
     path(
