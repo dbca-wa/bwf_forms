@@ -33,6 +33,7 @@ class FormBuilder {
         CUSTOM_EVENTS.CONTROL_DELETED,
         CUSTOM_EVENTS.CONTROL_DUPLICATED,
       ],
+      allowMultiple: settings.allowMultiple || false,
     };
     $.extend(_, _.initials);
 
@@ -109,9 +110,13 @@ class FormBuilder {
           .then((data) => {
             console.log('Success:', data);
             viewer.form.find("button[type='submit']").removeAttr('disabled');
+            if (fb.initials.allowMultiple) {
+              viewer.buildArea.clearAreaContainer();
+              viewer.buildArea.viewForm(form);
+            } else {
+              viewer.renderFormSubmitted();
+            }
             onSuccess && onSuccess(data);
-            viewer.buildArea.clearAreaContainer();
-            viewer.buildArea.viewForm(form);
           })
           .catch((error) => {
             viewer.form.find("button[type='submit']").removeAttr('disabled');

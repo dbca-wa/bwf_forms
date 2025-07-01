@@ -42,6 +42,26 @@ export default class ViewerLayoutController {
     this.buildArea.viewForm(this.form);
   }
 
+  renderFormSubmitted() {
+    this.initialViewerLayout();
+    this.buildArea.clearAreaContainer();
+    this.form.append(
+      markup(
+        'div',
+        [
+          'Form submitted successfully!',
+          markup('button', '', {
+            class: 'btn-close',
+            'data-bs-dismiss': 'alert',
+            'aria-label': 'Close',
+            type: 'button',
+          }),
+        ],
+        { class: 'alert alert-success  alert-dismissible fade show', role: 'alert' },
+      ),
+    );
+  }
+
   getFormData() {
     const formData = new FormData();
     const data = this.buildArea.area.getFieldValue();
