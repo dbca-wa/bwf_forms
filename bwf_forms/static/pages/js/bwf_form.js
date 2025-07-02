@@ -57,6 +57,24 @@ var bwf_form = {
         });
       });
     },
+    deactivateFormVersion: function (version_object_id, version_id) {
+      const _ = bwf_form;
+
+      return new Promise((resolve, reject) => {
+        $.ajax({
+          url: `${_.var.base_versions_url}${version_object_id}/deactivate_form_version/?version_id=${version_id}`,
+          type: "POST",
+          headers: { "X-CSRFToken": $("#csrf_token").val() },
+          success: function (response) {
+            resolve(response);
+          },
+          error: function (error) {
+            alert("Error deactivating version");
+            reject(error);
+          },
+        });
+      });
+    },
     markVersionAsCurrent: function (version_object_id, version_id) {
       const _ = bwf_form;
 

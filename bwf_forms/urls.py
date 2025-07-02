@@ -49,8 +49,8 @@ urlpatterns = [
         EditorView.as_view(),
         name="form_editor_with_version_id",
     ),
-    urls.re_path(
-        r"^structures/(?P<id>\d+)/edition/(?P<version>\d+)/(\w+|\-+|)+.json$",
+    path(
+        'definition/<int:id>/<uuid:version_id>.json',
         get_form_structure_file,
         name="get_form_structure_file",
     ),

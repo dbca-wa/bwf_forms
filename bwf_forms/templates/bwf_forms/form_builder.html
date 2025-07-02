@@ -73,14 +73,15 @@
           Create editable version
         </button>
         {% endif %}
-        <button
-          type="button"
+        <a
+          as="button"
           class="btn btn-sm btn-secondary"
-          id="btn-view-json"
+          href="{% url 'get_form_structure_file' version.id version.version_id %}"
+          target="_blank"
         >
           <i class="bi bi-filetype-json"></i>
           View JSON
-        </button>
+        </a>
       </div>
     </div>
   </div>
@@ -105,15 +106,8 @@
 <script src="/static/pages/js/bwf_form.js"></script>
 <script src="/static/pages/js/forms_editor.js"></script>
 
-<!-- USE_DEV
-DEV_URL -->
-{% if BWF_FORMS_USE_DEV %}
-<link rel="stylesheet" href="{{BWF_FORMS_DEV_URL}}/css/app.css" />
-<script src="{{BWF_FORMS_DEV_URL}}/js/app.js"></script>
-{% else%}
-<link rel="stylesheet" href="/static/form_builder/css/app.css" />
-<script src="/static/form_builder/js/form-builder.js"></script>
-{% endif %}
+{% include "bwf_govapp/form_render_block.html" %}
+
 <script>
   $(() => {
     const form_id = $("#form_id").val();
@@ -169,7 +163,7 @@ DEV_URL -->
 
     $("#btn-view-json").on("click", function () {
       const versionFile = $("#version_data").data("version-file");
-      const url = `${window.location.origin}/${versionFile}`;
+      const url = `${window.location}/definition/${version_object_id}/${version_id}.json`;
       window.open(url, "_blank").focus();
     });
   });

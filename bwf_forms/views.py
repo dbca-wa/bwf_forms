@@ -1,6 +1,7 @@
 import json
 import mimetypes
 import logging
+from datetime import datetime
 
 from django.shortcuts import get_object_or_404
 from rest_framework.decorators import action, permission_classes, api_view
@@ -111,7 +112,7 @@ class FormHistoryView(View):
 
         form = get_object_or_404(BwfForm, pk=form_id)
         versions = (
-            form.versions.all()
+            form.versions.exclude(is_disabled=True)
             .only(
                 "form_id",
                 "version_number",
@@ -307,27 +308,36 @@ class FormVersionAPIViewset(viewsets.ModelViewSet):
             )
         return JsonResponse({"success": True, "message": "Active version changed"})
 
+    @action(detail=True, methods=["POST"])
+    def deactivate_form_version(self, request, *args, **kwargs):
+        version_id = request.query_params.get("version_id", None)
+        version = get_object_or_404(
+            BwfFormVersion, pk=kwargs.get("pk"), version_id=version_id
+        )
+        if version.is_active:
+            return JsonResponse(
+                {"success": False, "message": "Cannot deactivate the active version"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        
+        version.is_disabled = True
+        version.disabled_at = datetime.now().astimezone()
+        version.save()
+        return JsonResponse(
+            {"success": True, "message": "Version deactivated successfully"}
+        )
+
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def get_form_structure_file(request, id, version_id):
-    bwf_form = get_object_or_404(BwfForm, id=id)
     file = None
-    if version_id:
-        bwf_form = get_object_or_404(BwfForm, id=id)
-        version = get_object_or_404(
-            BwfFormVersion, form=bwf_form, version_id=version_id
-        )
-        file = version.form_file
+
+    version = get_object_or_404(BwfFormVersion, id=id, version_id=version_id)
+    file = version.form_file
 
     if file is None:
         return Response("File doesn't exist", status=status.HTTP_404_NOT_FOUND)
 
-    file_data = None
-    try:
-        with open(file.path, "rb") as f:
-            file_data = f.read()
-            f.close()
-    except Exception as e:
-        return render(request, "govapp/404.html", context={})
+    file_data = version.get_json_form_structure()
     return Response(file_data, content_type=mimetypes.types_map[".json"])
