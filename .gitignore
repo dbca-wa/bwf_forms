@@ -1,0 +1,8 @@
+*.pyc
+config*.cfg
+data_storage/
+logs/
+dist/
+venv/
+bwf_forms/bwf_forms/frontend/form_builder/node_modules/
+*/node_modules/

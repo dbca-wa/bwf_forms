@@ -1,0 +1,35 @@
+/* By Athlon Front-End Team */
+
+/* Core variables */
+@import 'base/vars';
+
+/* CSS Reset */
+@import 'base/reset';
+
+/* CSS print */
+@import 'base/print';
+
+/* Fonts */
+@import 'base/fonts';
+
+/* Mixins, helpers and functions */
+@import 'base/mixins';
+
+/* Vendor */
+
+/* Components */
+
+/* Browser specific styles */
+@import 'dirty/hacks';
+
+/* Demo Page styles */
+@import 'demo';
+
+@import 'bootstrap/scss/bootstrap';
+$bootstrap-icons-font-dir: '~bootstrap-icons/font/fonts';
+@import 'bootstrap-icons/font/bootstrap-icons.scss';
+@import 'jquery-ui/themes/base/all.css';
+@import 'jquery-toast-plugin/dist/jquery.toast.min.css';
+
+/* App styles */
+@import 'form-builder';

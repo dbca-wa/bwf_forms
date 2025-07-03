@@ -1,0 +1,130 @@
+{% extends 'govapp/bwf_base.html' %} {% block content %}
+
+<div class="container-sm">
+<input type="hidden" id="form_id" value="{{ form.id }}" />
+  <input type="hidden" id="csrf_token" value="{{ csrf_token }}" />
+  <input
+    type="hidden"
+    id="version_data"
+    data-version-file="{{active_version.form_file}}"
+    data-is-editable="{{active_version.is_editable}}"
+  />
+  <div class="mb-2">
+    <div style="display: inline-flex">
+      <h4 class="card-title">{{form.name}}</h4>
+    </div>
+    <div class="d-flex">
+      <span class="text-secondary ms-2">
+        Version number: {{active_version.version_number}}</span
+      >
+      <div class="d-flex ms-3">
+        {% if active_version.is_active %}
+        <div><span class="badge bg-success">Active</span></div>
+        {% endif %}
+        <br />
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-body">
+      <ul class="nav nav-tabs mb-4 mt">
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'form_info' form.id %}">
+            <i class="bi bi-bookmark-star me-1"></i>Active Form</a
+          >
+        </li>
+        <li class="nav-item">
+          <a class="nav-link active" href="{% url 'version-history' form.id %}">
+            <i class="bi bi-clock-history me-1"></i>Version history</a
+          >
+        </li>
+      </ul>
+      <div class="row p-2">
+        <div class="col-12">
+          <div
+            id="versions-container"
+            class="row gap-1 py-md-2 align-items-center justify-content-center width-md-30"
+          >
+            <div class="card p-0">
+              <div class="card-header">
+                <i class="bi bi-clipboard2-pulse-fill"></i>
+                Versions
+              </div>
+              <div id="versions" class="p-3">
+                {% for version in versions %}
+
+                <div class="row mb-2 pb-2 version-row" data-version-id="{{ version.id }}">
+                  <div class="col-10">
+                    <a
+                      href="{% url 'form_editor_with_version_id' version.version_id %}"
+                      >#{{ version.version_number }} - {{ version.version_id}} </a
+                    ><br />
+                    <span class="text-muted text-sm"
+                      >{{ version.updated_at }}</span
+                    >
+                    {% if version.is_edition %}
+                    <span class="badge bg-primary">Draft</span>
+                    {% endif %}
+                  </div>
+                  <div class="col-2">
+                    <div class="dropdown">
+                      <a
+                        class="btn btn-sm btn-outline-primary dropdown-toggle"
+                        href="#"
+                        role="button"
+                        data-bs-toggle="dropdown"
+                        aria-expanded="false"
+                      >
+                      Options
+                      </a>
+
+                      <ul class="dropdown-menu">
+                        <li><a class="dropdown-item action-deactivate" href="#" data-version-id="{{ version.version_id }}" data-version-object-id="{{ version.id }}">Deactivate version</a></li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="/static/pages/js/bwf_form.js"></script>
+
+
+<script>
+  $(() => {
+    const form_id = $("#form_id").val();
+
+    $("#btn-view-definition").on("click", function () {
+      const versionFile = $("#active_version_data").data("version-file");
+      const url = `${window.location.origin}/${versionFile}`;
+      window.open(url, "_blank").focus();
+    });
+    
+    $(".action-deactivate").on("click", function (e) {
+      e.preventDefault();
+      const versionId = $(this).data("version-id");
+      const version_object_id = $(this).data("version-object-id");
+      if (!confirm("Are you sure you want to deactivate this version?")) {
+        return;
+      }
+      bwf_form.api
+        .deactivateFormVersion(version_object_id, versionId)
+        .then((response) => {
+          
+          $(`.version-row[data-version-id="${versionId}"]`).remove();
+          location.reload();
+        })
+        .catch((error) => {
+          console.error(error);
+          alert("Failed to deactivate the version.");
+        });
+    });
+  });
+</script>
+{% endblock %}

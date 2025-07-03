@@ -1,0 +1,9 @@
+{% block form_render_block %}
+{% if BWF_FORMS_USE_DEV %}
+<link rel="stylesheet" href="{{BWF_FORMS_DEV_URL}}/css/app.css" />
+<script src="{{BWF_FORMS_DEV_URL}}/js/app.js"></script>
+{% else%}
+<link rel="stylesheet" href="/static/form_builder/css/app.css" />
+<script src="/static/form_builder/js/form-builder.js"></script>
+{% endif %}
+{% endblock %}
